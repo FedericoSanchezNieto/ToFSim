@@ -1,3 +1,10 @@
+// -------------------------------------------------------------------------------------------
+//    Photon production, transport, detection electronics simulation including sampling 
+//    
+//        Author: F.Sanchez (Universite de Geneve) 
+//        V1 :  July 2025 
+// --------------------------------------------------------------------------------------------
+
 #ifndef GenWF_h
 #define GenWF_h 
 
