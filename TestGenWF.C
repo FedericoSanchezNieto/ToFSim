@@ -1,3 +1,10 @@
+// -------------------------------------------------------------------------------------------
+//    Example of usage of the GenWF class for photons read at both ends of the bar. 
+//    
+//        Author: F.Sanchez (Universite de Geneve) 
+//        V1 :  July 2025 
+// --------------------------------------------------------------------------------------------
+
 #include "GenWF.h"
 
 int main(int argc, char **argv){
