@@ -1,0 +1,34 @@
+{
+  "BarLength": 2.2, 
+  "IndexRefraction": 1.58,
+  "ReflectedFraction": 0.35,
+
+  "TimeSmear": 0.0, 
+    
+  "Amplitude": 0.17,
+    
+  "RaiseTime": 0.9,
+  "FallTime": 2.5, 
+  "Attenuation": 2.50,
+  "AttenuationShort": 0.10,
+  "FracShort": 0.14,
+ 
+  "quantumefficiency": 0.40,
+  "fillfactor": 0.74,
+  "photocoverage": 0.24,
+  "photonsperdedx": 9200.,
+
+  "SamplingTime": 0.3125,
+  "SamplingCell0Time": 0.0125,
+  "noise": 0.0022,
+  "threshold": 0.01,
+  "TotSamples": 62,
+  "PreSamples": 15,
+
+  "WF0": 0.01,
+  "WF1": 100.,
+  "WF2": 0.29,
+  "WF3": 7.0
+   
+}
+
