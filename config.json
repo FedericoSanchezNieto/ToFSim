@@ -1,34 +1,46 @@
 {
-  "BarLength": 2.2, 
-  "IndexRefraction": 1.58,
-  "ReflectedFraction": 0.35,
-
-  "TimeSmear": 0.0, 
+  "BarLength": 2.2,
     
-  "Amplitude": 0.17,
+  "IndexRefraction": 1.58,
+  "IndexRefractionSi": 5.13,
+  "IndexRefractionSiCover": 1.55,
+  "ReflectedFraction": 1.0,
+  "Mirror": 1,
+  "Reflectivity3DMat": 0.2,
+    
+  "gMie": 0.9,
+  "LambdaMie": 100.0,
+  "LambdaRayleigh": 3.6,
+  "Attenuation": 2.2,
+  "AttenuationShort": 0.02,
+  "FracShort": 0.0,
+
+  "TimeSmear": 0.02, 
+    
+  "Amplitude": 0.014,
     
   "RaiseTime": 0.9,
-  "FallTime": 2.5, 
-  "Attenuation": 2.50,
-  "AttenuationShort": 0.10,
-  "FracShort": 0.14,
+  "FallTime": 2.1,
  
-  "quantumefficiency": 0.40,
+  "quantumefficiency": 0.5,
   "fillfactor": 0.74,
   "photocoverage": 0.24,
-  "photonsperdedx": 9200.,
-
+  "Sicoverage": 0.313,  
+  "photonsperMeV": 10000.,
+  
   "SamplingTime": 0.3125,
-  "SamplingCell0Time": 0.0125,
-  "noise": 0.0022,
+  "noise": 0.0017,
   "threshold": 0.01,
+  "delaybtwSiPM": 0.21;
+  
   "TotSamples": 62,
   "PreSamples": 15,
 
   "WF0": 0.01,
-  "WF1": 100.,
-  "WF2": 0.29,
-  "WF3": 7.0
-   
+  "WF1": 20.,
+  "WF2": 0.3,
+  "WF3": 2.3,
+
+  "BallShapeTime": 2.6,  
 }
 
