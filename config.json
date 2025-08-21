@@ -6,18 +6,18 @@
   "IndexRefractionSiCover": 1.55,
   "ReflectedFraction": 1.0,
   "Mirror": 1,
-  "Reflectivity3DMat": 0.2,
+  "Reflectivity3DMat": 0.3,
     
   "gMie": 0.9,
   "LambdaMie": 100.0,
   "LambdaRayleigh": 3.6,
-  "Attenuation": 2.2,
+  "Attenuation": 3.4,
   "AttenuationShort": 0.02,
   "FracShort": 0.0,
 
   "TimeSmear": 0.02, 
     
-  "Amplitude": 0.014,
+  "Amplitude": 0.011,
     
   "RaiseTime": 0.9,
   "FallTime": 2.1,
@@ -38,8 +38,11 @@
 
   "WF0": 0.01,
   "WF1": 20.,
-  "WF2": 0.3,
-  "WF3": 2.3,
+  "WF2": 0.27,
+  "WF3": 2.1,
+  "WF4": 0.24,
+  "WF5": 2.7,
+    
 
   "BallShapeTime": 2.6,  
 }
