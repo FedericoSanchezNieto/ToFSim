@@ -28,8 +28,14 @@
 Double_t WFResponsefunction(Double_t *x, Double_t *par)
 {
    Float_t xx =x[0];
-   Double_t delta =  (xx-par[1])/(par[2] * ( xx - par[1] ) + par[3]) ; 
-   Double_t f = par[0]*TMath::Exp(-delta*delta/2.) ;
+   Double_t delta;
+   
+   if( xx <= par[1] ) 
+     delta =  (xx-par[1])/(par[2] * ( xx - par[1] ) + par[3]) ;
+   else 
+     delta =  (xx-par[1])/(par[4] * ( xx - par[1] ) + par[5]) ;
+   
+   Double_t f = par[0]*TMath::Exp(-0.5*delta*delta) ;
    return f;
 }
 
@@ -66,7 +72,7 @@ class  GenWF{
 
   // Reflection 
   double ReflFactor2surf(double cos0, double n0, double n1, double &cos1 );
-  double ReflFactorAirScint(double cos0,double &cos1 );
+  double ReflFactorScintAir(double cos0,double &cos1 );
   double ReflFactorAirSiPM(double cos0,double &cos1 );
 
   void computeMieScatteredDirection(double& z1, double& z2, double& z3 );
@@ -74,8 +80,6 @@ class  GenWF{
   void computeRayleighScatteredDirection(double& z1, double& z2, double& z3 );
 
   double sampleCosThetaHG(void);
-
-  void BallisticEffect(std::vector<double> &wfpub);
 
   TH1F *GetPhotonTimeArrivalHist(int Endcode ) { if(Endcode == 0 ) return hpt0; else return hpt1; } 
 
@@ -167,7 +171,9 @@ class  GenWF{
   double WF1;
   double WF2;
   double WF3;
-
+  double WF4;
+  double WF5;
+  
   double BallShapeTime; 
   
 
@@ -201,9 +207,9 @@ double GenWF::ReflFactor2surf(double cos0, double n0, double n1, double &cos1 ) 
 }
 
 
-double GenWF::ReflFactorAirScint(double cos0,double &cos1 ) {
-  double n0= n ; // Scintillator index of refraction 
-  double n1=1.0; // Air index of refraction
+double GenWF::ReflFactorScintAir(double cos0,double &cos1 ) {
+  double n0 =  n ; // Scintillator index of refraction 
+  double n1 = 1.0; // Air index of refraction
 
    // Plastic-Air 
   double R = ReflFactor2surf(cos0,n0,n1,cos1); 
@@ -229,25 +235,6 @@ double GenWF::ReflFactorAirSiPM(double cos0,double &cos1 ) {
 }
 
 
-void GenWF::BallisticEffect(std::vector<double> &wfpub){
-  double tauc = BallShapeTime*SamplingTime;
-  std::vector<double> wfpubref(wfpub);
-
-  //  std::cout << wfpub[10] ; 
-  for(int i = 0; i < wfpub.size(); i++ ) {
-    wfpub[i] = 0; 
-    for(int j = 0; j < i+1; j++ ) {
-      double timedist = TMath::Abs(i-j)*SamplingTime;
-      wfpub[i] += 1./tauc*TMath::Exp(-timedist/tauc)*wfpubref[j]; 
-    }
-  }
-
-  //  std::cout << "  " <<  wfpub[10] <<std::endl; 
-  
-  return;
-}
-
-
 GenWF::GenWF(){
 
   // Some default configuration. 
@@ -256,7 +243,7 @@ GenWF::GenWF(){
   n = 1.58 ; //index of refraction Scint
   nSi = 4.0; // index of refraction Si
   nSiCover = 1.56; 
-  speed = 300000000.e-9/n; // m/ns
+  speed = 299792458.e-9/n; // m/ns
   RaiseTime = 0.9; // ns
   FallTime = 2.1; // ns 
   
@@ -342,7 +329,7 @@ GenWF::GenWF(std::string jsonfile ){
   BarLength = config["BarLength"]; // in m
 
   n = config["IndexRefraction"]; //index of refraction;
-  speed = 300000000.e-9/n; // m/ns
+  speed = 299792458.e-9/n; // m/ns
 
   gMie = config["gMie"];
   LambdaMie = config["LambdaMie"];
@@ -386,7 +373,10 @@ GenWF::GenWF(std::string jsonfile ){
   WF1 = config["WF1"];
   WF2 = config["WF2"];
   WF3 = config["WF3"];
+  WF4 = config["WF4"];
+  WF5 = config["WF5"];
 
+  
   BallShapeTime = config["BallShapeTime"];
   
   file.close();
@@ -540,8 +530,10 @@ void GenWF::PrintSettings(void) {
   std::cout << " ----------------------------- " << std::endl;
   std::cout << " ------ WF parameters  --------- " << std::endl;
   std::cout << " ----------------------------- " << std::endl;
-  std::cout << " Ballistic Shape time " << BallShapeTime << " samples " << std::endl;  
-  printf("%3.2f*TMath::Exp(-(t-%3.2f)^2)/(2*(%3.2f*(t-%3.2f)+%3.2f)^2)\n",WF0,WF1,WF2,WF1,WF3) ;
+  std::cout << "  if ( x < " << WF1 << " ) " << std::endl;
+  printf("      %3.2f*TMath::Exp(-(t-%3.2f)^2)/(2*(%3.2f*(t-%3.2f)+%3.2f)^2)\n",WF0,WF1,WF2,WF1,WF3) ;
+  std::cout << "  elseif ( x >= " << WF1 << " ) " << std::endl;
+  printf("      %3.2f*TMath::Exp(-(t-%3.2f)^2)/(2*(%3.2f*(t-%3.2f)+%3.2f)^2)\n",WF0,WF1,WF4,WF1,WF5) ;
   std::cout << " ----------------------------- " << std::endl;
 }
 
@@ -550,8 +542,8 @@ void GenWF::InitiateSupportFunctions(void){
   //
   // This is the electronics response function for a fast imput light pulse. It includes all the electronics chain.
   //
-  wfrf = new TF1("wfrf",WFResponsefunction,0.,300.,4);
-  wfrf->SetParameters(WF0,WF1,WF2,WF3);
+  wfrf = new TF1("wfrf",WFResponsefunction,0.,300.,6);
+  wfrf->SetParameters(WF0,WF1,WF2,WF3,WF4,WF5);
 
   wfnorm = 0;
   for(int j = 0; j < (int) wfrf->GetXmax();j++ ) {
@@ -619,7 +611,7 @@ int GenWF::TransportPhoton(double position,double timesamplingphase) {
       // Reflect the photons
       double cosint;
       // First reflection in Scint-Air transition 
-      double Rsa = ReflFactorAirScint(abs(dirz),cosint);
+      double Rsa = ReflFactorScintAir(abs(dirz),cosint);
       
       if( r->Uniform(0.,1.) > Rsa ) { // photon not reflected in Scint-Air
 	if(  r->Uniform(0.,1.) < Sicoverage ) { // Is in the SiPM acceptance ?
@@ -666,28 +658,32 @@ int GenWF::TransportPhoton(double position,double timesamplingphase) {
 	    photontime -= correctedistf/speed; 
 	  }
 	}
-	else { // Outside SiPM acceptance   
+	else { // Outside SiPM acceptance
+
+	  // Check the absorption in the 3D printed material
+	  
 	  if( r->Uniform(0.,1.) > Reflectivity3DMat ) { // Absorbed by plastic around SiPM
 	    absorbed = true;
 	    break;
 	  }
 	  else { 
 	    double correctedistf;
+	    
 	    // Asume pure diffused reflexion. 
 	    cosine = r->Uniform(0.,1.);  // randomised the direction, positive or negative direction decided later. 
 	    sine = sqrt(1.-cosine*cosine);
-
+	    
 	    // The refraction entering from the air into the scintillator. 
 	    sine = sine/n; 
 	    cosine = sqrt(1.-sine*sine);
-
+	    
 	    phi = r->Uniform(0.,2.*3.141592);
 	    dirx = sine*cos(phi);
 	    diry = sine*sin(phi); 
 	    // Position the photon back to the scintillator
 	    if( z <= 0 ) {
 	      correctedistf = TMath::Abs(z/dirz);
-	      z    = 0;
+	      z    =   0;
 	      dirz = cosine;  // it goes forwards. Done after time correction. 
 	    }
 	    else if( z >= BarLength ) {
@@ -698,7 +694,7 @@ int GenWF::TransportPhoton(double position,double timesamplingphase) {
 	    else {
 	      std::cout << " Not Possible " << std::endl; exit(0);
 	    }
-	    photontime -= correctedistf/speed + 2.*0.003; // Add 2 * 3 ps for the travel between the Scint and the readout plane. 
+	    photontime -= correctedistf/speed;
 	  }
 	}
       }
@@ -721,8 +717,7 @@ int GenWF::TransportPhoton(double position,double timesamplingphase) {
     }
     else {  // Photon was not absorbed or detected or suffered scattering. 
     
-      double selectprocess = r->Uniform(0.,1.); 
-      
+      double selectprocess = r->Uniform(0.,1.);
       // Mie Scattering 
       if( selectprocess < Lambda/LambdaMie )
 	computeMieScatteredDirection(dirx,diry,dirz);
@@ -736,8 +731,8 @@ int GenWF::TransportPhoton(double position,double timesamplingphase) {
   } while( !absorbed && !detected );
   
   if( detected ) {    
-    //Randomise the scintillator de-excitation
-    //And the sampling phase
+
+    //Add the sampling phase bewteen the electronics clock and the event arrival. 
     photontime += timesamplingphase;
     
     // Add the scintillator de-excitation. 
@@ -747,27 +742,27 @@ int GenWF::TransportPhoton(double position,double timesamplingphase) {
       hpt0->Fill(photontime);
     else if( BarEnd == 1 ) 
       hpt1->Fill(photontime);
-      
-    // Sample arrival time bin. 
-    int tj0 = (int)(photontime/SamplingTime);
-    
-    double offset = (photontime-tj0*SamplingTime)/SamplingTime; // offset inside the sampling for the signal integration
-    if( TMath::Abs(offset) > 1 ) std::cout << " This is strange " << offset << "  " << SamplingTime << std::endl;
-    
+
     // Take into account the time difference from the 4 blocks of SiPM 
     int ngroup = r->Uniform(0.,4.); // From 0 to 4 !
     switch(ngroup) {
     case 0:  // The readout is centered bewteen these two 
     case 1: 
-      offset += 0;
+      photontime += 0;
       break;
     case 2:
-      offset += delaybtwSiPM/SamplingTime;
+      photontime += delaybtwSiPM; 
       break;
     case 3:
-      offset += 2.* delaybtwSiPM/SamplingTime;
+      photontime += 2.* delaybtwSiPM; 
       break;
     }
+    
+    // Sample arrival time bin. 
+    int tj0 = (int)(photontime/SamplingTime);
+    
+    double offset = (photontime-tj0*SamplingTime)/SamplingTime; // offset inside the sampling for the signal integration
+    if( TMath::Abs(offset) > 1 ) std::cout << " This is strange " << offset << "  " << SamplingTime << std::endl;
     
     // Add the electronics shaper
     for(int j = 0; j < (int) wfrf->GetXmax();j++ ) {
@@ -870,8 +865,6 @@ bool GenWF::ElectronicsSimulation(int endcode ) {
   // Copy the valid section of the WF 
   std::vector<double> wfpub(&wf[ith-PreSamples],&wf[ith+PostSamples]); 
   
-  // Simulate the Balistic effect 
-  // BallisticEffect(wfpub); 
 
   // Recompute the Cell0Time to the beginning of the WF using the time clock of the Cell0Time.
   if( endcode == 0 ) { 
